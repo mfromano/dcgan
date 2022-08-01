@@ -1,6 +1,7 @@
 '''
 Models for dcgan, both generator and discriminator
 '''
+from attr import asdict
 import torch.nn as nn
 from . import N_FEAT_LATENT, N_FEAT_MAP_G, N_FEAT_MAP_D, CHANNELS
 
@@ -79,21 +80,21 @@ class D(nn.Module):
         self.ngpu = ngpu
         self.main = nn.Sequential(
             nn.Conv2d(
-                    CHANNELS,
-                    N_FEAT_MAP_D,
-                    4,
-                    2,
-                    1,
-                    bias=False
+                CHANNELS,
+                N_FEAT_MAP_D,
+                4,
+                2,
+                1,
+                bias=False
             ),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(
-                    N_FEAT_MAP_D,
-                    N_FEAT_MAP_D*2,
-                    4,
-                    2,
-                    1,
-                    bias=False
+                N_FEAT_MAP_D,
+                N_FEAT_MAP_D*2,
+                4,
+                2,
+                1,
+                bias=False
             ),
             nn.BatchNorm2d(N_FEAT_MAP_D*2),
             nn.LeakyReLU(0.2, inplace=True),
@@ -129,3 +130,21 @@ class D(nn.Module):
         )
     def forward(self, input):
         self.main(input)
+
+class Inception:
+    pass
+
+class AlexNet:
+    def __init__(self, ngpu: int):
+        self.ngpu = ngpu
+        self.main = nn.Sequential(
+            nn.Conv2d(CHANNELS, N_FEAT_MAP_D, 4, 2, 1),
+            nn.ReLU(inplace=True),
+            nn.LocalResponseNorm(5, 0.0001, 0.75, 2),
+            
+            nn.Conv2d(N_FEAT_MAP_D*2, N_FEAT_MAP_D*4, 4, 2, 1),
+            nn.ReLU(inplace=True),
+            nn.LocalResponseNorm(5, 0.0001, 0.75, 2),
+
+            nn.Conv2d(N_FEAT_MAP_D*4, N_FEAT_MAP_D*8, 4, 2, 1),
+        )
