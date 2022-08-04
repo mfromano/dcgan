@@ -134,17 +134,27 @@ class D(nn.Module):
 class Inception:
     pass
 
-class AlexNet:
-    def __init__(self, ngpu: int):
-        self.ngpu = ngpu
-        self.main = nn.Sequential(
-            nn.Conv2d(CHANNELS, N_FEAT_MAP_D, 4, 2, 1),
+class AlexConvLayer(self):
+    def __init__(self, channels_in: int, channels_out: int):
+        super(AlexConvLayer, self).__init__()
+        self._main = nn.Sequential(
+            nn.Conv2d(channels_in, channels_out, 4, 2, 1),
             nn.ReLU(inplace=True),
-            nn.LocalResponseNorm(5, 0.0001, 0.75, 2),
-            
-            nn.Conv2d(N_FEAT_MAP_D*2, N_FEAT_MAP_D*4, 4, 2, 1),
-            nn.ReLU(inplace=True),
-            nn.LocalResponseNorm(5, 0.0001, 0.75, 2),
-
-            nn.Conv2d(N_FEAT_MAP_D*4, N_FEAT_MAP_D*8, 4, 2, 1),
+            nn.LocalResponseNorm(5, 0.0001, 0.75, 2)
         )
+    def forward(self, x):
+        return self._main(x)
+
+class AlexNet:
+    def __init__(self, ngpu: int, n_conv_layers: int):
+        self.ngpu = ngpu
+        layers = [AlexConvLayer(CHANNELS, N_FEAT_MAP_D)]
+
+        for i in range(n_conv_layers-1):
+            layers += [AlexConvLayer(N_FEAT_MAP_D*(2**(i+1)), N_FEAT_MAP_D*(2**(i+2)))]
+        layers += [nn.Linear(N_FEAT_MAP_D*(2**6), 1, bias=True)]
+        layers += [nn.Sigmoid()]
+        self.main = nn.Sequential(*layers)
+    
+    def forward(self, x):
+        return self._main(x)
